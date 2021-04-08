@@ -1,3 +1,4 @@
+const { count } = require("console");
 var esprima = require("esprima");
 var options = {tokens:true, tolerant: true, loc: true, range: true };
 var fs = require("fs");
@@ -35,7 +36,7 @@ function FunctionBuilder()
 	// The number of parameters for functions
 	this.ParameterCount  = 0,
 	// Number of if statements/loops + 1
-	this.SimpleCyclomaticComplexity = 0;
+	this.SimpleCyclomaticComplexity = 1;
 	// The max depth of scopes (nested ifs, loops, etc)
 	this.MaxNestingDepth    = 0;
 	// The max number of conditions if one decision statement.
@@ -111,7 +112,8 @@ function complexity(filePath)
 	fileBuilder.FileName = filePath;
 	fileBuilder.ImportCount = 0;
 	builders[filePath] = fileBuilder;
-
+	var name = '';
+	var logic_counter = 0;
 	// Tranverse program with a function visitor.
 	traverseWithParents(ast, function (node) 
 	{
@@ -120,11 +122,28 @@ function complexity(filePath)
 			var builder = new FunctionBuilder();
 
 			builder.FunctionName = functionName(node);
+			if(node.params){
+				builder.ParameterCount = node.params.length;
+			}
 			builder.StartLine    = node.loc.start.line;
-
 			builders[builder.FunctionName] = builder;
+			name = builder.FunctionName;
 		}
-
+		if (isDecision(node) && name != ''){
+			builders[name].SimpleCyclomaticComplexity++;
+		}
+		if (node.type == 'Literal' && typeof node.value == 'string'){
+			builders[filePath].Strings++
+		}
+		if ((node.type === "LogicalExpression") && ((node.operator === "&&") || (node.operator === "||"))){
+			logic_counter++;
+		}
+		else if (name != ''){
+			if(logic_counter > builders[name].MaxConditions){
+				builders[name].MaxConditions = logic_counter;
+			}
+			logic_counter = 0;
+		}
 	});
 
 }
@@ -153,7 +172,7 @@ function childrenLength(node)
 function isDecision(node)
 {
 	if( node.type == 'IfStatement' || node.type == 'ForStatement' || node.type == 'WhileStatement' ||
-		 node.type == 'ForInStatement' || node.type == 'DoWhileStatement')
+		 node.type == 'ForInStatement' || node.type == 'DoWhileStatement' || node.type =='SwitchStatement' || node.type == 'ForOfStatement')
 	{
 		return true;
 	}
