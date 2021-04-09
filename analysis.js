@@ -132,7 +132,7 @@ function complexity(filePath)
 		if (isDecision(node) && name != ''){
 			builders[name].SimpleCyclomaticComplexity++;
 		}
-		if (node.type == 'Literal' && typeof node.value == 'string'){
+		if (node.type == 'Literal'){
 			builders[filePath].Strings++
 		}
 		if ((node.type === "LogicalExpression") && ((node.operator === "&&") || (node.operator === "||"))){
