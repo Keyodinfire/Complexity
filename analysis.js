@@ -2,6 +2,7 @@ const { count } = require("console");
 var esprima = require("esprima");
 var options = {tokens:true, tolerant: true, loc: true, range: true };
 var fs = require("fs");
+const { get } = require("http");
 
 function main()
 {
@@ -9,7 +10,7 @@ function main()
 
 	if( args.length == 0 )
 	{
-		args = ["analysis.js"];
+		args = ["mystery.js"];
 	}
 	var filePath = args[0];
 	
@@ -132,7 +133,7 @@ function complexity(filePath)
 		if (isDecision(node) && name != ''){
 			builders[name].SimpleCyclomaticComplexity++;
 		}
-		if (node.type == 'Literal' && typeof node.value == 'string'){
+		if (node.type == 'Literal'){
 			builders[filePath].Strings++
 		}
 		if ((node.type === "LogicalExpression") && ((node.operator === "&&") || (node.operator === "||"))){
@@ -165,6 +166,24 @@ function childrenLength(node)
 		}
 	}	
 	return count;
+}
+
+function getStrings(filePath){
+	var buf = fs.readFileSync(filePath, "utf8");
+	var ast = esprima.parse(buf, options);
+
+	var fileBuilder = new FileBuilder();
+	fileBuilder.FileName = filePath;
+	fileBuilder.ImportCount = 0;
+	builders[filePath] = fileBuilder;
+
+	traverseWithParents(ast, function (node) 
+	{
+		if (node.type == 'Literal'){
+			builders[filePath].Strings++;
+		}
+	});
+	return builders[filePath].Strings++;
 }
 
 
@@ -295,3 +314,4 @@ mints.toString().split(".")[0] + " " + szmin;
       }
   }
  exports.complexity = complexity;
+ exports.getStrings = getStrings;
