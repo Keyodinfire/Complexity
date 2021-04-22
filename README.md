@@ -1,4 +1,4 @@
-#By: Andy Molla
+By: Andy Molla
 # Complexity & Travis-CI Lab
 
 In this lab, you'll be implementing simple algorithms for checking basic properties of code complexity, and working with Travis-CI for Continuous Integration.
